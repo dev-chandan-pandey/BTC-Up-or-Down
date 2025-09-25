@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API = axios.create({ baseURL: 'http://localhost:3000' });
+const API = axios.create({ baseURL: 'https://btc-up-or-down.onrender.com' });
 
 export async function signup(email, password){ return API.post('/auth/signup', { email, password }); }
 export async function login(email, password){ return API.post('/auth/login', { email, password }); }

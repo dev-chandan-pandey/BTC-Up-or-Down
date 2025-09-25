@@ -9,7 +9,7 @@ export default function AdminPanel({ token }) {
   const fetchPending = async () => {
     setLoading(true);
     try {
-      const r = await axios.get('http://localhost:3000/bids', {
+      const r = await axios.get('https://btc-up-or-down.onrender.com/bids', {
         params: { status: 'PENDING_SETTLEMENT' },
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -29,7 +29,7 @@ export default function AdminPanel({ token }) {
   const settleBid = async (bidId) => {
     try {
       setMsg('Settling bid ' + bidId + '...');
-      await axios.post(`http://localhost:3000/admin/settle/${bidId}`, {}, {
+      await axios.post(`https://btc-up-or-down.onrender.com/admin/settle/${bidId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMsg('Bid ' + bidId + ' settled successfully!');
