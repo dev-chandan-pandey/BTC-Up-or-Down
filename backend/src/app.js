@@ -8,7 +8,7 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 app.use(express.json());
 
-const ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+const ORIGIN = process.env.FRONTEND_ORIGIN || 'https://btc-up-or-down.onrender.com';
 app.use(cors({ origin: ORIGIN }));
 
 app.use('/auth', rateLimit.loginLimiter, authRoutes);
