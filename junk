@@ -1,0 +1,216 @@
+Full-Stack Assignment (4-5 hrs)
+Problem — “BTC: Up or Down”
+Build a minimal, production-ready slice of a Bitcoin prediction game. Users place a directional bid (“UP” or “DOWN”) on whether BTC-USD will be higher or lower exactly 60 seconds after placement. At T+60, each bid is settled, win/loss recorded, and balances updated.
+Official Price Rule (must implement)
+Price source: lock a single public spot API (Coinbase, Binance, Kraken). Record source at bid time.
+Entry price: mid-price at T0 (bid timestamp), fetched on the server.
+Settlement price: mid-price at T0 + 60s, fetched by a server process, not the browser.
+Tie rule: if settlement == entry after rounding to 2 dp, status = PUSH (refund).
+API failure: retry 3× over 10s; then mark PENDING_SETTLEMENT and expose an admin endpoint to settle later.
+
+Scope You Must Ship
+User Stories
+Auth: sign up / login; see current balance.
+Place Bid: choose direction (UP/DOWN) + stake; see locked entry price and settlement ETA (T+60).
+My Bids: paginated list with statuses: OPEN, WON, LOST, PUSH, PENDING_SETTLEMENT.
+Settlement: a background server process settles each bid at T+60 and updates balance atomically.
+Fairness: show price source, entry/settlement prices, and a link to audit log.
+Functional Requirements
+Frontend (SPA)
+Tech: React + Vite (or Next.js App Router used as SPA is fine).
+Screens
+Dashboard: current balance, quick “UP/DOWN” widget, last 10 bids.
+Place Bid: amount input (min 10, max 10,000), direction, confirm dialog with entry price + T+60 time.
+My Bids: filter by status, paginate, show settlement details + audit log link.
+
+
+UX/State
+Optimistic add of OPEN bid → reconcile on API response.
+Inline validation; clear error and empty states.
+Backend (API)
+Tech: Node (Express) or javascript (mern) . Use any relational DB (SQLite/Postgres) with migrations.
+Auth: Sessions or JWT. Passwords hashed.
+Endpoints
+POST /auth/signup, POST /auth/login
+GET /me → { balance, openBidsCount }
+POST /bids → body { amount, direction } → locks entry price server-side; returns { bidId, entryPrice, settleAt }
+GET /bids?status=&page=&limit=
+GET /bids/:id → includes audit trail
+POST /admin/settle/:id (protected) → manual settle hook for PENDING_SETTLEMENT
+Business rules
+Atomic balance debit on bid create; atomic credit on win; refund on PUSH; no double-settlement.
+Idempotency: POST /bids and settlement accept Idempotency-Key header; same key within 5 minutes → same result.
+Validation: direction ∈ {UP, DOWN}; numeric amount bounds; rate-limit /auth/login and /bids.
+Data Model (suggested)
+User { id, email(unique), passwordHash, balance_cents, createdAt }
+Bid  { id, userId(FK), amount_cents, direction, status,
+       entryPrice, settlePrice?, priceSource, settleAt, version, createdAt, settledAt? }
+AuditLog { id, bidId, type, payload(json), createdAt }
+Status ∈ { OPEN, WON, LOST, PUSH, PENDING_SETTLEMENT }
+Background Settlement 
+Implement one of the two (your choice, document it):
+Option A — In-process scheduler
+A server timer runs every second, finds bids where now >= settleAt AND status=OPEN, settles them.
+Pros: fastest to build. Cons: single-instance only; needs care for overlap.
+Option B — Queue + worker (in-memory)
+On bid create, enqueue a job for settleAt. A worker pulls due jobs and settles.
+Pros: clearer separation; easier to reason about races. Cons: more code surface.
+Both options must guarantee: no double-settlement (use row versioning or SELECT … FOR UPDATE / unique constraint on (bidId, settledAt) plus an incrementing version).
+
+Mandatory Security & Correctness
+Least privilege DB user; prepared statements / ORM; input sanitation.
+CORS: only your frontend origin.
+Precision: money in cents (integers); prices as decimal strings; never floats for money math.
+Clock drift: use server time; record settleAt server-side.
+Fairness: store and display price source, entry/settlement prices, and hash of raw API payloads in AuditLog.
+Pagination: cap limit ≤ 100; deterministic order (newest first).
+
+Critical Thinking & Edge Cases (must address in README)
+Race safety at settlement: show exact mechanism (e.g., SQL SELECT … FOR UPDATE + version, or unique index + upsert).
+Price spikes / stale data: implement retry/backoff; reject stale responses if API timestamp >5s off.
+API outage: after retries, mark PENDING_SETTLEMENT and document how admin settles later.
+Idempotency: how keys are persisted and expired; include quick test.
+User experience: how frontend reconciles optimistic OPEN with server truth.
+
+What to Submit
+Repo structure: frontend/ and backend/ (or monorepo).
+README (clear and short) including:
+Architecture diagram (ASCII is fine).
+How to run backend & frontend locally (no cloud needed), .env.example.
+How your scheduler/worker works and prevents races.
+Price source and example response; how you compute mid-price.
+Verification in <2 minutes (see sample below).
+Trade-offs you made due to the 3–4 hr cap.
+Tests (≥5): status resolution, idempotency, rounding/tie rule, pagination bounds, auth guard.
+Postman/Thunder collection or cURL snippets.
+60–90s video walkthrough.
+
+
+
+Sample cURL Sequence (example)
+# 1) Sign up & login
+curl -s -X POST http://localhost:3000/auth/signup -H 'Content-Type: application/json' \
+  -d '{"email":"a@b.com","password":"Str0ng!Pass"}'
+TOKEN=$(curl -s -X POST http://localhost:3000/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"a@b.com","password":"Str0ng!Pass"}' | jq -r .token)
+
+# 2) Place a bid (UP, 100 cents) with idempotency
+curl -s -X POST http://localhost:3000/bids \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: abc-123" \
+  -H 'Content-Type: application/json' \
+  -d '{"amount":100,"direction":"UP"}'
+
+# 3) After ~65s, fetch bids
+curl -s -X GET "http://localhost:3000/bids?status=" -H "Authorization: Bearer $TOKEN"
+
+# 4) Admin settle a pending one (if any)
+curl -s -X POST http://localhost:3000/admin/settle/<BID_ID> -H "Authorization: Bearer <ADMIN_TOKEN>"
+
+Evaluation Rubric (100)
+End-to-End Correctness (25): place → settle → balances update → audit trail.
+Backend Design & Reliability (25): clear routes, transactions/locks, idempotency, rate limits.
+Security & Fairness (20): hashed passwords, no secrets in code, verifiable prices/logs.
+Frontend UX (15): fast, clear states, validation, empty/error handling.
+Testing & DX (10): runnable tests, .env.example, quick start, Postman/cURL.
+Code Quality (5): structure, naming, small cohesive functions.
+
+
+// src/pages/AdminDashboard.jsx
+import React from 'react';
+import { listBids, adminSettle } from '../services/api';
+
+export default function AdminDashboard(){
+  const [pending, setPending] = React.useState([]);
+  const [msg, setMsg] = React.useState('');
+  const token = localStorage.getItem('token');
+
+  async function load(){
+    try {
+      const r = await listBids(token, 'PENDING_SETTLEMENT', 1, 20);
+      setPending(r.data.bids || []);
+    } catch(e){
+      console.error(e);
+    }
+  }
+
+  async function settle(bidId){
+    setMsg(`Settling ${bidId}...`);
+    try {
+      await adminSettle(token, bidId);
+      setMsg(`Bid ${bidId} settled`);
+      load();
+    } catch(e){
+      setMsg(`Error: ${e.response?.data?.error || e.message}`);
+    }
+  }
+
+  React.useEffect(()=>{ load(); }, []);
+
+  return (
+    <div>
+      <h2>Admin Dashboard</h2>
+      <p>{msg}</p>
+      <ul>
+        {pending.map(b => (
+          <li key={b.id}>
+            {b.direction} {b.amount_cents}c — status {b.status}
+            <button onClick={()=>settle(b.id)}>Settle</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+export async function adminSettle(token, bidId){
+  return API.post(`/admin/settle/${bidId}`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  balance_cents Int     @default(100000) // e.g., $1000 in cents
+
+  bids         Bid[]
+  createdAt    DateTime @default(now())
+}
+
+model Bid {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  amount_cents Int
+  direction  String
+  status     BidStatus @default(OPEN)
+  entryPrice Float?
+  settleAt   DateTime?
+  auditLogs  AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  bidId     String
+  bid       Bid      @relation(fields: [bidId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BidStatus {
+  OPEN
+  PENDING_SETTLEMENT
+  WON
+  LOST
+}
+
+npx prisma migrate dev --name init
+npx prisma generate && npx prisma migrate deploy

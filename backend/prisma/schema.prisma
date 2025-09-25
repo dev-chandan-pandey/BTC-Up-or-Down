@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("USER")
+  balance_cents Int     @default(100000) // default $1000 balance for dev
+  createdAt    DateTime @default(now())
+  bids         Bid[]
+}
+
+model Bid {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  amount_cents   Int
+  direction      String
+  status        String   @default("OPEN")
+  entryPrice     String
+  settlePrice    String?
+  priceSource    String
+  settleAt       DateTime
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  settledAt      DateTime?
+  auditLogs      AuditLog[]
+  idempotencyKey String?
+
+@@index([idempotencyKey])
+
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  bidId     String
+  bid       Bid      @relation(fields: [bidId], references: [id])
+  type      String
+  payload   String
+  createdAt DateTime @default(now())
+}
+
+model Idempotency {
+  key        String   @id
+  userId     String?
+  createdAt  DateTime @default(now())
+  response   String?
+}
+

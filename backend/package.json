@@ -1,0 +1,30 @@
+{
+  "name": "btc-up-down-backend",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "nodemon src/index.js",
+    "migrate": "prisma migrate dev --name init",
+    "prisma-generate": "prisma generate",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.15.0",
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^6.11.2",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.0",
+    "node-fetch": "^2.6.7",
+    "prisma": "^4.15.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^6.3.4"
+  }
+}
