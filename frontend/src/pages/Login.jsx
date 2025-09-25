@@ -1,35 +1,3 @@
-// import React, { useState } from "react";
-// import { login } from "../services/api";
-// import { useNavigate } from "react-router-dom";
-
-// export default function Login() {
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [msg, setMsg] = useState("");
-//   const navigate = useNavigate();
-
-//   async function submit(e) {
-//     e.preventDefault();
-//     try {
-//       const res = await login(email, password);
-//       localStorage.setItem("token", res.data.token);
-//       setMsg("Login successful!");
-//       setTimeout(() => navigate("/place-bid"), 1000);
-//     } catch (err) {
-//       setMsg(err.response?.data?.error || "Error");
-//     }
-//   }
-
-//   return (
-//     <form onSubmit={submit}>
-//       <h2>Login</h2>
-//       <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-//       <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
-//       <button type="submit">Login</button>
-//       <div>{msg}</div>
-//     </form>
-//   );
-// }
 import React from 'react';
 import { login } from '../services/api';
 

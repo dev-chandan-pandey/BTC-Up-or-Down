@@ -1,31 +1,3 @@
-// import React from 'react';
-// import { listBids } from '../services/api';
-
-// export default function MyBids(){
-//   const [bids, setBids] = React.useState([]);
-//   const token = localStorage.getItem('token');
-
-//   React.useEffect(()=>{
-//     async function load(){ 
-//       const r = await listBids(token);
-//       setBids(r.data.bids || []);
-//     }
-//     load().catch(console.error);
-//   }, []);
-
-//   return (
-//     <div>
-//       <h2>My Bids</h2>
-//       <ul>
-//         {bids.map(b => (
-//           <li key={b.id}>
-//             {b.direction} {b.amount_cents}c — {b.status} — entry {b.entryPrice} — settleAt {new Date(b.settleAt).toLocaleTimeString()}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// }
 import React from 'react';
 import { listBids } from '../services/api';
 

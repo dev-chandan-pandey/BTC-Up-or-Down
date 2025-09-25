@@ -1,35 +1,3 @@
-// import React from 'react';
-// import Dashboard from './pages/Dashboard';
-// import PlaceBid from './pages/PlaceBid';
-// import MyBids from './pages/MyBids';
-// import Signup from './pages/Signup';
-// import Login from './pages/Login';
-
-// export default function App(){
-//   const [route, setRoute] = React.useState('dashboard');
-//   return (
-//     <div className="app">
-//       <header>
-//         <h1>BTC: Up or Down</h1>
-//         <nav>
-//           <button onClick={()=>setRoute('dashboard')}>Dashboard</button>
-//           <button onClick={()=>setRoute('place')}>Place Bid</button>
-//           <button onClick={()=>setRoute('mybids')}>My Bids</button>
-//           <button onClick={()=>setRoute('signup')}>Signup</button>
-//           <button onClick={()=>setRoute('login')}>Login</button>
-//         </nav>
-//       </header>
-//       <main>
-//         {route==='dashboard' && <Dashboard />}
-//         {route==='place' && <PlaceBid />}
-//         {route==='mybids' && <MyBids />}
-//         {route==='signup' && <Signup />}
-//         {route==='login' && <Login/>}
-//       </main>
-//     </div>
-//   );
-// }
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';

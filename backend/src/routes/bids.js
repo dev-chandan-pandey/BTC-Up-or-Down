@@ -1,16 +1,3 @@
-// const express = require('express');
-// const router = express.Router();
-// const { authMiddleware } = require('../middlewares/authMiddleware');
-// const bidController = require('../controllers/bidController');
-
-// router.use(authMiddleware);
-
-// router.post('/', bidController.createBid);
-// router.get('/', bidController.listBids);
-// router.get('/:id', bidController.getBid);
-
-// module.exports = router;
-// routes/bids.js
 const express = require('express');
 const { body, query } = require('express-validator');
 const { createBid, listBids, getBid } = require('../controllers/bidController');
